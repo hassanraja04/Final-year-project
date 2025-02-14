@@ -1,38 +1,292 @@
-.App {
-  text-align: center;
+:root {
+  --background-color: #171717;
+  --sidebar-bg-color: #222;
+  --iconcolor: grey;
+  --widthforscreen: 768px;
+  --widthforsidebar: 200px;
+  --maxwidthforpersonmsg: 475px;
+  --ff: "Inter", sans-serif;
+  --text-color: white;
+  --max-height-for-textbox: 150px;
+  --headings: bold 35px/35px var(--ff);
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.background {
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--background-color);
+  display: flex;
+  flex-direction: column;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.navbar {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  width: 100%;
+  gap: 30px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+button {
+  background: none;
+  border: none;
+}
+
+button svg {
+  height: 50px;
+  width: 50px;
+  color: var(--iconcolor);
+}
+
+.newchat svg {
+  fill: var(--iconcolor);
+}
+
+.main-wrapper {
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+}
+
+.header-wrapper h1 {
+  color: var(--text-color);
+  font: var(--headings);
+}
+
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: var(--widthforscreen);
+  padding: 15px 20px;
+  border-radius: 20px;
+  border: none;
+  /* background: rgba(64, 65, 79, 0.9);  */
+  background: rgba(88, 88, 88, 0.2);
   color: white;
+  font-size: 16px;
+  resize: none;
+  overflow-y: auto;
+  max-height: var(--max-height-for-textbox); 
+  line-height: 1.5;
+  gap: 20px;
+  border: 1px solid #444;
 }
 
-.App-link {
-  color: #61dafb;
+.input-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%; 
+  justify-content: space-between;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.input-container textarea {
+  width: 100%;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-color);
+  overflow-y: auto;
+  max-height: var(--max-height-for-textbox);
+  resize: none;
+}
+
+.input-container textarea:focus {
+  outline: none;
+  /* box-shadow: 0 0 8px rgba(0, 123, 255, 0.6); */
+}
+
+.input-container button {
+  align-self: flex-end; 
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 15px;
+  margin-top: 10px;
+  background-color: var(--iconcolor);
+  border-radius: 50%;
+  width: 45px; 
+  height: 45px; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease, color 0.3s ease; 
+}
+
+.input-container button.active {
+  background-color: white; 
+  color: black; 
+}
+
+.send-btn svg {
+  height: 17px;
+  width: 17px;
+  color: rgb(77, 77, 77);
+}
+
+/* Sidebar Styles */
+.sidebar-content {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--widthforsidebar);
+  height: 100vh;
+  /* height: calc(100vh - 57px); */
+  background-color: var(--sidebar-bg-color);
+  color: var(--text-color);
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease-in-out;
+}
+
+.recent-chats {
+  margin-top: 20px;
+}
+
+.recent-chats h3 {
+  margin-top: 0;
+}
+
+.recent-chats p {
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+/* Adjust Main Content When Sidebar is Open */
+.main-wrapper {
+  margin-left: 0; 
+  transition: margin-left 0.3s ease-in-out;
+}
+
+.sidebar-content + .main-wrapper {
+  margin-left: 200px; /* Adjust main content when sidebar is open */
+}
+
+.sidebar-open-icons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.sidebar-open-icons button {
+  padding: 0;
+}
+
+.messages-wrapper {
+  width: var(--widthforscreen);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  margin: 0 auto;
+}
+
+.chat-container {
+  display: flex;  /* Use flexbox to lay out the message bubbles */
+  flex-direction: column;  /* Stack messages vertically */
+  gap: 10px;  /* Space between the user message and AI response */
+  width: 100%;  /* Make the container take up the full width available */
+}
+
+/* User Message */
+.user-message {
+  align-self: flex-end;  /* Keep the bubble on the right side */
+  background-color: rgba(88, 88, 88, 0.8);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 15px;
+  font-size: 16px;
+  
+  width: auto;  /* Allow the width to adjust based on the message */
+  max-width: var(--maxwidthforpersonmsg);  /* Allow it to take up the full width available (within the container) */
+  word-wrap: break-word;  /* Ensure text wraps inside the bubble */
+  overflow-wrap: break-word;  /* Ensure long words break inside the bubble */
+  white-space: pre-wrap;  /* Handle line breaks inside the message */
+  word-break: break-word;  /* Break long words to the next line */
+}
+
+/* AI Response */
+.ai-response {
+  align-self: flex-start;
+  color: var(--text-color);
+  font-weight: bold;
+  padding: 10px 15px;
+  font-size: 18px;
+}
+
+.input-wrapper-aftr-frst-msg {
+  display: flex;
+  flex-direction: column;
+  width: var(--widthforscreen);
+  padding: 15px 20px;
+  border-radius: 20px;
+  border: none;
+  /* background: rgba(64, 65, 79, 0.9);  */
+  background: rgba(88, 88, 88, 0.2);
+  color: white;
+  font-size: 16px;
+  resize: none;
+  overflow-y: auto;
+  max-height: var(--max-height-for-textbox); 
+  line-height: 1.5;
+  gap: 20px;
+  border: 1px solid #444;
+  /* To Put it to the bottom of the screen */
+  position: fixed;
+  bottom: 30px; 
+}
+
+.input-container-aftr-frst-msg {
+  display: flex;
+  flex-direction: column;
+  height: 100%; 
+  justify-content: space-between;
+}
+
+.input-container-aftr-frst-msg textarea {
+  width: 100%;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-color);
+  overflow-y: auto;
+  max-height: var(--max-height-for-textbox);
+  resize: none;
+}
+
+.input-container-aftr-frst-msg textarea:focus {
+  outline: none;
+  /* box-shadow: 0 0 8px rgba(0, 123, 255, 0.6); */
+}
+
+.input-container-aftr-frst-msg button {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 15px;
+  margin: 0;
+  background-color: var(--iconcolor);
+  border-radius: 50%;
+  width: 45px; 
+  height: 45px; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease, color 0.3s ease; 
+}
+
+.input-container-aftr-frst-msg button.active {
+  background-color: white; 
+  color: black; 
+}
+
+.send-btn-aftr-frst-msg svg {
+  height: 17px;
+  width: 17px;
+  color: rgb(77, 77, 77);
 }
