@@ -43,16 +43,18 @@ function App() {
   }
 
   // Handle form submission and store messages
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     
     if (text.trim()) {
   
       // Add user message to the messages array
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { text, sender: 'user' },
-      ]);
+      setMessages((prev) => [...prev, { text, sender: 'user' }]);
+      const userQuestion = text;
+      // setMessages((prevMessages) => [
+      //   ...prevMessages,
+      //   { text, sender: 'user' },
+      // ]);
     
       // Clear the input field
       setText(''); // This clears the form input
@@ -71,13 +73,38 @@ function App() {
       }
   
       // Simulate AI response after a slight delay
-      setTimeout(() => {
-        console.log("Simulating AI response");
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { text: "This is a simulated AI response.", sender: 'ai' },
+      // setTimeout(() => {
+      //   console.log("Simulating AI response");
+      //   setMessages((prevMessages) => [
+      //     ...prevMessages,
+      //     { text: "This is a simulated AI response.", sender: 'ai' },
+      //   ]);
+      // }, 500);
+      try {
+        // Send a POST request to /echo
+        const response = await fetch("http://localhost:8000/api/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: text }),
+        });
+    
+        const data = await response.json();
+    
+        // Display the echoed response in your chat
+        setMessages((prev) => [
+          ...prev,
+          {
+            text: data.answer, // The placeholder or eventually your GPT-like summary
+            sender: "ai",
+          },
+          {
+            text: `Top chunks: ${JSON.stringify(data.topChunks, null, 2)}`,
+            sender: "ai",
+          },
         ]);
-      }, 500);
+      } catch (error) {
+        console.error("Error sending message to server:", error);
+      }
     } else {
       console.log("No text entered to send."); 
     }
