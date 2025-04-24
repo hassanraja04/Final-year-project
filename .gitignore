@@ -11,6 +11,9 @@ frontend/.env
 # Ignore embeddings file as it very large
 backend/data/studiesEmbeddings.json
 
+# Ignore models as it very large
+backend/models/
+
 # Ignore build and cache files
 frontend/build/
 frontend/.parcel-cache/

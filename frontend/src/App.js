@@ -97,10 +97,6 @@ function App() {
             text: data.answer, // The placeholder or eventually your GPT-like summary
             sender: "ai",
           },
-          {
-            text: `Top chunks: ${JSON.stringify(data.topChunks, null, 2)}`,
-            sender: "ai",
-          },
         ]);
       } catch (error) {
         console.error("Error sending message to server:", error);
@@ -108,7 +104,38 @@ function App() {
     } else {
       console.log("No text entered to send."); 
     }
-  };  
+  };
+  
+  function renderAIResponse(text) {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const keywordRegex = /(Conclusion:|Rationale:)/g;
+  
+    return text.split(urlRegex).map((part, i) => {
+      if (urlRegex.test(part)) {
+        // Trim trailing punctuation
+        const cleanUrl = part.replace(/[\)\]\.,;:]+$/g, "");
+        return (
+          <a
+            key={`url-${i}`}
+            href={cleanUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {cleanUrl}
+          </a>
+        );
+      } else {
+        // split further on the keywords
+        return part
+          .split(keywordRegex)
+          .map((seg, j) =>
+            keywordRegex.test(seg)
+              ? <strong key={`kw-${i}-${j}`}>{seg}</strong>
+              : <span key={`txt-${i}-${j}`}>{seg}</span>
+          );
+      }
+    });
+  }
      
   return (
     <div className="background">
@@ -179,7 +206,10 @@ function App() {
                 <div className="chat-container">
                   {messages.map((message, index) => (
                     <div key={index} className={message.sender === 'user' ? 'user-message' : 'ai-response'}>
-                      {message.text}
+                      {message.sender === 'ai'
+                        ? renderAIResponse(message.text)
+                        : message.text
+                      }
                     </div>
                   ))}
                 </div>

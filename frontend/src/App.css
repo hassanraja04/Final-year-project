@@ -232,9 +232,18 @@ button svg {
 .ai-response {
   align-self: flex-start;
   color: var(--text-color);
-  font-weight: bold;
+  font-weight: normal;
   padding: 10px 15px;
   font-size: 18px;
+  white-space: pre-wrap;
+}
+
+.ai-response a {
+  color: blue;
+  text-decoration: underline;
+  display: block;            /* each link on its own line */
+  margin: 0.5em 0;           /* blank line above & below */
+  font-weight: normal;       /* links aren’t bold unless you want them */
 }
 
 .input-wrapper-aftr-frst-msg-container {
