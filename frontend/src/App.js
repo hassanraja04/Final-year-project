@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRightLong } from '@fortawesome/free-solid-svg-icons'
+import { faStop } from "@fortawesome/free-solid-svg-icons";
 
 function App() {
 
@@ -11,6 +12,8 @@ function App() {
   const [questionAsked, setQuestionAsked] = useState(false);
   const [messages, setMessages] = useState([]); // New state for storing messages
   const textareaRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const abortCtrlRef = useRef(null);
 
   const handleTextChange = (e) => {
     const newText = e.target.value;
@@ -51,11 +54,7 @@ function App() {
       // Add user message to the messages array
       setMessages((prev) => [...prev, { text, sender: 'user' }]);
       const userQuestion = text;
-      // setMessages((prevMessages) => [
-      //   ...prevMessages,
-      //   { text, sender: 'user' },
-      // ]);
-    
+  
       // Clear the input field
       setText(''); // This clears the form input
   
@@ -71,21 +70,19 @@ function App() {
       if (!questionAsked) {
         setQuestionAsked(true); // Switch to the second view after the first message
       }
+
+      // 2) set loading + new controller
+      const controller = new AbortController();
+      abortCtrlRef.current = controller;
+      setIsLoading(true);
   
-      // Simulate AI response after a slight delay
-      // setTimeout(() => {
-      //   console.log("Simulating AI response");
-      //   setMessages((prevMessages) => [
-      //     ...prevMessages,
-      //     { text: "This is a simulated AI response.", sender: 'ai' },
-      //   ]);
-      // }, 500);
       try {
         // Send a POST request to /echo
         const response = await fetch("http://localhost:8000/api/ask", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ question: text }),
+          signal: abortCtrlRef.current.signal,
         });
     
         const data = await response.json();
@@ -99,7 +96,22 @@ function App() {
           },
         ]);
       } catch (error) {
-        console.error("Error sending message to server:", error);
+        if (error.name == 'AbortError') {
+          setMessages(prev => [
+            ...prev,
+            { text: "Response aborted", sender: "ai" }
+          ]);
+        }
+        else {
+          console.error("Error sending message to server:", error);
+          setMessages(prev => [
+            ...prev,
+            { text: "Error fetching response. Please try again later", sender: "ai" }
+          ]);
+        }
+      } finally {
+        setIsLoading(false);
+        abortCtrlRef.current = null;
       }
     } else {
       console.log("No text entered to send."); 
@@ -212,6 +224,11 @@ function App() {
                       }
                     </div>
                   ))}
+                  {isLoading && (
+                    <div className="ai-response">
+                      <span className="blinking-caret"></span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className='input-wrapper-aftr-frst-msg-container'>
@@ -223,6 +240,7 @@ function App() {
                       rows="1"
                       onChange={handleTextChange}
                       value={text}
+                      disabled={isLoading}               // disable input while loading
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) { // Check if Enter is pressed without Shift
                           e.preventDefault(); // Prevent the default behavior (new line)
@@ -230,13 +248,27 @@ function App() {
                         }
                       }}
                     />
-                    <button
-                      className={`send-btn-aftr-frst-msg ${text.trim() ? 'active' : ''}`}
-                      type="submit"
-                      disabled={isButtonDisabled}
-                    >
-                      <FontAwesomeIcon icon={faRightLong} />
-                    </button>
+                    {isLoading ? (
+                      // Stop button + blinking caret
+                      <button
+                        type="button"
+                        className="stop-btn"
+                        onClick={() => {
+                          abortCtrlRef.current?.abort();
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faStop} />
+                      </button>
+                    ) : (
+                      // Normal send arrow
+                      <button
+                        className={`send-btn-aftr-frst-msg ${text.trim() ? 'active' : ''}`}
+                        type="submit"
+                        disabled={isButtonDisabled}
+                      >
+                        <FontAwesomeIcon icon={faRightLong} />
+                      </button>
+                    )}
                   </form>
                 </div>
               </div>

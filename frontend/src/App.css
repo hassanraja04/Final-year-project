@@ -334,3 +334,27 @@ button svg {
   width: 17px;
   color: rgb(77, 77, 77);
 }
+
+.blinking-caret {
+  display: inline-block;                /* make width/height apply */
+  width: 0.5em;                         /* same as your .effect */
+  height: 1.2em;
+  margin-left: 10px;                    /* tweak to taste */
+  background-color: var(--text-color);  /* draw a block in text color */
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes blink {
+  0%, 50%   { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+button.stop-btn {
+  background-color: var(--text-color);
+}
+
+.stop-btn svg {
+  height: 15px;
+  width: 15px;
+  color: rgb(77, 77, 77);
+}
