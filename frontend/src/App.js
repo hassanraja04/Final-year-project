@@ -1,8 +1,23 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRightLong } from '@fortawesome/free-solid-svg-icons'
 import { faStop } from "@fortawesome/free-solid-svg-icons";
+
+const allMyths = [
+  "Will lifting heavy weights make you bulky",
+  "Are longer workouts better",
+  "Does more sweat equals a better workout",
+  "Does stretching helps prevent injuries",
+  "Can you spot reduce fat",
+  "If I don't feel sore after my workout, does that mean I didn't work hard enough",
+  "Should older people lift weights",
+  "Should I avoid Carbohydrates when trying to lose weight",
+  "If i don't workout, Will my muscles turn into fat",
+  "Is it true I need to rush to consume protein within 30 minutes after my workout to maximize muscle growth",
+  "Does lifting weights stop you from growing taller",
+  "Can I eat whatever junk food I want as long as I work out regularly"
+]
 
 function App() {
 
@@ -10,10 +25,29 @@ function App() {
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [questionAsked, setQuestionAsked] = useState(false);
-  const [messages, setMessages] = useState([]); // New state for storing messages
+  const [messages, setMessages] = useState([]); 
   const textareaRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const abortCtrlRef = useRef(null);
+  const typingIndexRef = useRef(null);
+  const containerRef = useRef(null)
+  const messageRefs = useRef([])
+  const [suggestions, setSuggestions] = useState(() => pickFour(allMyths))
+
+  function pickFour(arr) {
+    // simple shuffle
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy.slice(0, 4);
+  }
+  
+  // on first render
+  useEffect(() => {
+    setSuggestions(pickFour(allMyths));
+  }, []);
 
   const handleTextChange = (e) => {
     const newText = e.target.value;
@@ -36,6 +70,7 @@ function App() {
     setQuestionAsked(false);
     // Clear the input field
     setText('');
+    messageRefs.current = [];
     // Clear messages if you want a fresh conversation:
     setMessages([]);
     // Reset the textarea height if needed
@@ -43,80 +78,222 @@ function App() {
       textareaRef.current.style.height = '22px';
       textareaRef.current.style.height = 'auto';
     }
+    setSuggestions(pickFour(allMyths));
   }
 
-  // Handle form submission and store messages
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    
-    if (text.trim()) {
-  
-      // Add user message to the messages array
-      setMessages((prev) => [...prev, { text, sender: 'user' }]);
-      const userQuestion = text;
-  
-      // Clear the input field
-      setText(''); // This clears the form input
-  
-      // Access the textarea directly from the form (using e.target)
-      if (textareaRef.current) {
-        const textarea = textareaRef.current;
-        textarea.style.height = '22px';
-        textarea.style.height = 'auto';
-      } else {
-        console.log("Textarea not found in handleSendMessage.");
-      }
-  
-      if (!questionAsked) {
-        setQuestionAsked(true); // Switch to the second view after the first message
-      }
+  useLayoutEffect(() => {
+    if (!containerRef.current || messageRefs.current.length === 0) return;
+    const c = containerRef.current;
+    const last = messageRefs.current[messageRefs.current.length - 1];
+    // scroll the container so that `last` sits at the top
+    c.scrollTo({ top: last.offsetTop, behavior: 'smooth' });
+  }, [messages]);
 
-      // 2) set loading + new controller
-      const controller = new AbortController();
-      abortCtrlRef.current = controller;
-      setIsLoading(true);
+  // Handle form submission and store messages
+  // const handleSendMessage = async (e) => {
+  //   e.preventDefault();
+    
+  //   if (text.trim()) {
   
-      try {
-        // Send a POST request to /echo
-        const response = await fetch("http://localhost:8000/api/ask", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: text }),
-          signal: abortCtrlRef.current.signal,
+  //     // Add user message to the messages array
+  //     setMessages((prev) => [...prev, { text, sender: 'user' }]);
+  //     const userQuestion = text;
+  
+  //     // Clear the input field
+  //     setText(''); // This clears the form input
+  
+  //     // Access the textarea directly from the form (using e.target)
+  //     if (textareaRef.current) {
+  //       const textarea = textareaRef.current;
+  //       textarea.style.height = '22px';
+  //       textarea.style.height = 'auto';
+  //     } else {
+  //       console.log("Textarea not found in handleSendMessage.");
+  //     }
+  
+  //     if (!questionAsked) {
+  //       setQuestionAsked(true); // Switch to the second view after the first message
+  //     }
+
+  //     // 2) set loading + new controller
+  //     const controller = new AbortController();
+  //     abortCtrlRef.current = controller;
+  //     setIsLoading(true);
+  
+  //     try {
+  //       // Send a POST request to /echo
+  //       const response = await fetch("http://localhost:8000/api/ask", {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({ question: text }),
+  //         signal: abortCtrlRef.current.signal,
+  //       });
+    
+  //       const data = await response.json();
+
+  //       // Stop blinking, enqueue stub → shows static caret
+  //       setIsLoading(false);
+    
+  //       // 3) push the AI stub
+  //       setMessages(prev => {
+  //         const stub = {
+  //           sender: 'ai',
+  //           fullText: data.answer,
+  //           displayedText: '',
+  //           isTyping: true
+  //         };
+  //         typingIndexRef.current = prev.length;
+  //         return [...prev, stub];
+  //       });
+
+  //       // 4) typewriter animation
+  //       const answer = data.answer;
+  //       let i = 0;
+  //       const intervalId = setInterval(() => {
+  //         setMessages(prev => {
+  //           const msgs = [...prev];
+  //           const idx = typingIndexRef.current;
+  //           const msg = msgs[idx];
+  //           const next = answer.slice(0, i + 1);
+  //           msgs[idx] = { ...msg, displayedText: next };
+  //           return msgs;
+  //         });
+  //         i++;
+  //         if (i >= answer.length) {
+  //           clearInterval(intervalId);
+  //           // remove caret
+  //           setMessages(prev => {
+  //             const copy = [...prev];
+  //             copy[typingIndexRef.current] = {
+  //               ...copy[typingIndexRef.current],
+  //               isTyping: false
+  //             };
+  //             return copy;
+  //           });
+  //         }
+  //       }, 17); // 30ms per character, tweak as you like
+
+  //     } catch (error) {
+  //       if (error.name == 'AbortError') {
+  //         setMessages(prev => [
+  //           ...prev,
+  //           { text: "Response aborted", sender: "ai" }
+  //         ]);
+  //       }
+  //       else {
+  //         console.error("Error sending message to server:", error);
+  //         setMessages(prev => [
+  //           ...prev,
+  //           { text: "Error fetching response. Please try again later", sender: "ai" }
+  //         ]);
+  //       }
+  //     } finally {
+  //       setIsLoading(false);
+  //       abortCtrlRef.current = null;
+  //     }
+  //   } else {
+  //     console.log("No text entered to send."); 
+  //   }
+  // };
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!text.trim()) return;
+  
+    const question = text.trim();
+  
+    // 1) push the user message
+    setMessages((prev) => [...prev, { text: question, sender: "user" }]);
+  
+    // 2) reset input
+    setText("");
+
+    // Access the textarea directly from the form (using e.target)
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      textarea.style.height = '22px';
+      textarea.style.height = 'auto';
+    } else {
+      console.log("Textarea not found in handleSendMessage.");
+    }
+
+    setIsButtonDisabled(true);
+    if (!questionAsked) setQuestionAsked(true);
+  
+    // 3) fire off the AI
+    askQuestion(question);
+  };
+  
+
+  // This drives the POST → stub → type-writer animation
+  async function askQuestion(question) {
+    // show loader
+    const controller = new AbortController();
+    abortCtrlRef.current = controller;
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("http://localhost:8000/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+        signal: controller.signal,
+      });
+      const { answer } = await res.json();
+
+      setIsLoading(false);
+
+      // enqueue AI “stub” for typewriter
+      setMessages((prev) => {
+        const stub = {
+          sender: "ai",
+          fullText: answer,
+          displayedText: "",
+          isTyping: true,
+        };
+        typingIndexRef.current = prev.length;
+        return [...prev, stub];
+      });
+
+      // typewriter effect (exactly as you already have it)
+      let i = 0;
+      const interval = setInterval(() => {
+        setMessages((prev) => {
+          const msgs = [...prev];
+          const idx = typingIndexRef.current;
+          const next = answer.slice(0, i + 1);
+          msgs[idx] = { ...msgs[idx], displayedText: next };
+          return msgs;
         });
-    
-        const data = await response.json();
-    
-        // Display the echoed response in your chat
+        i++;
+        if (i >= answer.length) {
+          clearInterval(interval);
+          setMessages((prev) => {
+            const copy = [...prev];
+            copy[typingIndexRef.current].isTyping = false;
+            return copy;
+          });
+        }
+      }, 17);
+
+    } catch (err) {
+      setIsLoading(false);
+      if (err.name === "AbortError") {
         setMessages((prev) => [
           ...prev,
-          {
-            text: data.answer, // The placeholder or eventually your GPT-like summary
-            sender: "ai",
-          },
+          { text: "Response aborted", sender: "ai" },
         ]);
-      } catch (error) {
-        if (error.name == 'AbortError') {
-          setMessages(prev => [
-            ...prev,
-            { text: "Response aborted", sender: "ai" }
-          ]);
-        }
-        else {
-          console.error("Error sending message to server:", error);
-          setMessages(prev => [
-            ...prev,
-            { text: "Error fetching response. Please try again later", sender: "ai" }
-          ]);
-        }
-      } finally {
-        setIsLoading(false);
-        abortCtrlRef.current = null;
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { text: "Error fetching response", sender: "ai" },
+        ]);
       }
-    } else {
-      console.log("No text entered to send."); 
+    } finally {
+      abortCtrlRef.current = null;
     }
-  };
+  }
+
   
   function renderAIResponse(text) {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -185,6 +362,27 @@ function App() {
               <div className="header-wrapper">
                 <h1>What myth would you like to debunk?</h1>
               </div>
+              <div className="suggestion-cards">
+                {suggestions.map((myth, idx) =>
+                  <button
+                    key={idx}
+                    className="suggestion-card"
+                    onClick={() => {
+                      messageRefs.current = [];
+                      // show chat view
+                      setQuestionAsked(true);
+                      // seed the user message
+                      setMessages([{ text: myth, sender: "user" }]);
+                      // disable the (now hidden) input under the hood
+                      setIsButtonDisabled(true);
+                      // launch the AI
+                      askQuestion(myth);
+                    }}
+                  >
+                    {myth}
+                  </button>
+                )}
+              </div>
               <div className="input-wrapper">
                 <form className="input-container" onSubmit={handleSendMessage}>
                   <textarea
@@ -213,17 +411,31 @@ function App() {
         ) : (
           // Chat View
           <>
-            <div className='messages-wrapper-container'>
+            <div className='messages-wrapper-container' ref={containerRef}>
               <div className="messages-wrapper">
-                <div className="chat-container">
-                  {messages.map((message, index) => (
-                    <div key={index} className={message.sender === 'user' ? 'user-message' : 'ai-response'}>
-                      {message.sender === 'ai'
-                        ? renderAIResponse(message.text)
-                        : message.text
-                      }
-                    </div>
-                  ))}
+                <div className="chat-container" >
+                {messages.map((msg,i) => (
+                  <div
+                    key={i}
+                    // stash each message node in our refs array
+                    ref={el => { messageRefs.current[i] = el }}
+                    className={msg.sender==='user'?'user-message':'ai-response'}
+                  >
+                    {msg.sender==='ai' ? (
+                      <>
+                        {renderAIResponse(msg.displayedText ?? msg.text)}
+                        
+                        {/* only show the NON-BLINKING caret while we’re typing out this message */}
+                        {msg.isTyping && <span className="static-caret" />}
+
+                        {/* 3) done? no caret */}
+                      </>
+                    ) : (
+                      // user bubble
+                      <span>{msg.text}</span>
+                    )}
+                  </div>
+                ))}
                   {isLoading && (
                     <div className="ai-response">
                       <span className="blinking-caret"></span>
