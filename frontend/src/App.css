@@ -168,10 +168,113 @@ button svg {
   padding: 20px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
   transition: transform 0.3s ease-in-out;
+  z-index: 10;
 }
 
 .recent-chats {
   margin-top: 20px;
+}
+
+.recent-chats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px;
+}
+
+.chat-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  /* padding: 10px 14px; */
+  border-radius: 8px;
+  background-color: transparent;
+  color: var(--text-color);
+  transition: background-color 0.2s;
+  text-align: left;
+  font-size: 14px;
+  position: relative;
+  padding: 5px;
+  /* padding-top: 0;
+  padding-left: 0; */
+}
+
+.chat-title {
+  /* Allow this item to grow & shrink, but not force the card wider */
+  flex: 1 1 auto;
+  /* Required so text-overflow works on a flex child */
+  min-width: 0;
+  /* never wrap to multiple lines */
+  white-space: nowrap;
+  /* hide anything past the end */
+  overflow: hidden;
+  /* show “…” when it’s cut off */
+  /* text-overflow: ellipsis; */
+  /* give a little breathing room before the dots button */
+  margin-right: 3px;
+}
+
+.chat-card:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.chat-card--active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.chat-settings-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  margin-left: auto;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.chat-settings-btn:hover {
+  opacity: 1;
+}
+
+.chat-settings-btn svg {
+  height: 25px;
+  width: 25px;
+  fill: white;
+}
+.chat-menu-popup {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px);      /* push it just outside the right edge */
+  transform: translateY(-50%); /* vertically center on the card */
+  background-color: var(--sidebar-bg-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  padding: 8px 0;
+  z-index: 11;
+  min-width: 120px;
+  white-space: nowrap;         /* prevent wrapping */
+}
+
+/* each action line */
+.chat-menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  text-align: left;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.chat-menu-item.delete {
+  color: #e55353;
+}
+
+.chat-menu-item:hover {
+  background: rgba(255,255,255,0.1);
 }
 
 .recent-chats h3 {
@@ -268,11 +371,46 @@ button svg {
 }
 
 .ai-response a {
-  color: blue;
+  color: #007bff;
   text-decoration: underline;
   display: block;            /* each link on its own line */
   margin: 0.5em 0;           /* blank line above & below */
   font-weight: normal;       /* links aren’t bold unless you want them */
+
+  background-image: linear-gradient(
+    to right,
+    #20c997,
+    #20c997 50%,
+    #007bff 50%
+  );
+  background-size: 200% 100%;
+  background-position: -100%;
+  display: inline-block;
+  padding: 5px 0;
+  position: relative;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: all 0.3s ease-in-out;
+}
+
+.ai-response a:before {
+  content: '';
+  background: #20c997;
+  display: block;
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 3px;
+  transition: all 0.3s ease-in-out;
+}
+
+.ai-response a:hover {
+  background-position: 0;
+}
+
+.ai-response a:hover::before {
+  width: 100%;
 }
 
 .input-wrapper-aftr-frst-msg-container {

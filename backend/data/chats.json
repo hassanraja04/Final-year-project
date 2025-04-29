@@ -1,0 +1,87 @@
+{
+  "3494ecc4-d6ce-4eff-bdc2-a3ac087e486f": {
+    "title": "Does lifting weights stop you from growing taller",
+    "messages": [
+      {
+        "sender": "user",
+        "text": "Does lifting weights stop you from growing taller",
+        "timestamp": 1745860201823
+      },
+      {
+        "sender": "ai",
+        "text": "Conclusion: No https://doi.org/10.34614/iyrc2021f08)\nRationale: The study \"Effect of strength training on bone growth and development in children and adolescents\" https://doi.org/10.34614/iyrc2021f08) found that strength training does not have a negative impact on growth plate closure in children and adolescents.",
+        "timestamp": 1745860216190
+      },
+      {
+        "sender": "user",
+        "text": "hello",
+        "timestamp": 1745860248460
+      },
+      {
+        "sender": "ai",
+        "text": "Response aborted",
+        "timestamp": 1745860250694
+      },
+      {
+        "sender": "user",
+        "text": "Should carbohydrates be minimised to avoid weight gain",
+        "timestamp": 1745886235519
+      },
+      {
+        "sender": "ai",
+        "text": "1. Conclusion: Yes (Low-Carbohydrate Diet, <https://pubmed.ncbi.nlm.nih.gov/30725769/>)\n2. Rationale: Low-carbohydrate diets have been a strategy for weight loss since 1860, and recent studies have shown that low-carbohydrate approaches can be effective for weight loss. 1. Conclusion: No (Calorie for Calorie, Dietary Fat Restriction Results in More Body Fat Loss than Carbohydrate Restriction in People with Obesity, <https://doi.org/10.1016/j.cmet.2015.08.009> and Nutrient timing revisited: is there a post-exercise anabolic window?, <https://doi.org/10.1201/b16307-5>)\n2. Rationale: While low-carbohydrate diets can be effective for weight loss, other factors such as calorie intake and fat restriction may also play a role in body fat loss. Additionally, the effectiveness of carbohydrate restriction may vary depending on the individual's goals and preferences.",
+        "timestamp": 1745886260147
+      },
+      {
+        "sender": "user",
+        "text": "Is there a post workout anabolic window for protein ingestion",
+        "timestamp": 1745886289017
+      },
+      {
+        "sender": "ai",
+        "text": "1. Conclusion: Yes ()\n2. Rationale: states that immediate post-exercise protein dosing for the aim of mitigating catabolism seems redundant, given that the next scheduled protein-rich meal (whether it occurs immediately or 1–2 hours post-exercise) is likely sufficient for maximizing recovery and anabolism.",
+        "timestamp": 1745886301431
+      }
+    ]
+  },
+  "85325cb6-a4d7-4808-842d-afcb660c40ba": {
+    "title": "Can I eat whatever junk food I want as long as I work out regularly",
+    "messages": [
+      {
+        "sender": "user",
+        "text": "Can I eat whatever junk food I want as long as I work out regularly",
+        "timestamp": 1745860645140
+      },
+      {
+        "sender": "ai",
+        "text": "Conclusion: No https://ijeks.com/wp-content/uploads/2024/03/IJEKS-3-01-011.pdf)\nRationale: The first study shows that an unhealthy food addiction is a serious problem and that the choice of junk food or health is ours. Conclusion: Yes https://ijeks.com/wp-content/uploads/2024/03/IJEKS-3-01-011.pdf)\nRationale: The second study shows that parents can safeguard their children's eating habits and keep them away from unhealthy eating by having a strong will and being conscious of its negative consequences. It is also important to teach children about the negative health impacts of fast food, as this can help them avoid it and the problems that come with it. Conclusion: No https://ijeks.com/wp-content/uploads/2024/03/IJEKS-3-01-011.pdf)\nRationale: The third study shows that junk food habits can contribute to metabolic disorders such as obesity, diabetes, and heart disease, and that recent research has highlighted the role of fast food in these conditions. Therefore, it is not advisable to eat whatever junk food one wants, even if one works out regularly.",
+        "timestamp": 1745860672472
+      }
+    ]
+  },
+  "4419260a-f3cd-4814-b19c-ddd7025b2480": {
+    "title": "Can you spot reduce fat",
+    "messages": [
+      {
+        "sender": "user",
+        "text": "Can you spot reduce fat",
+        "timestamp": 1745885669245
+      },
+      {
+        "sender": "ai",
+        "text": "Conclusion: No https://doi.org/10.1249/mss.0b0138058a5cb) Subjects who participated in an upper-body resistance training program did not experience significant changes in subcutaneous fat in their dominant (untrained) arms, suggesting that spot reduction does not occur as a result of an exercise program. Rationale: The study found that resistance training did not lead to significant changes in subcutaneous fat in the untrained arm, which contradicts the belief in spot reduction.",
+        "timestamp": 1745885685740
+      },
+      {
+        "sender": "user",
+        "text": "hello",
+        "timestamp": 1745886091516
+      },
+      {
+        "sender": "ai",
+        "text": "Response aborted",
+        "timestamp": 1745886093672
+      }
+    ]
+  }
+}

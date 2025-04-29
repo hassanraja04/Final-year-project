@@ -33,6 +33,47 @@ function App() {
   const containerRef = useRef(null)
   const messageRefs = useRef([])
   const [suggestions, setSuggestions] = useState(() => pickFour(allMyths))
+  const [chatList, setChatList] = useState([]);
+  const [currentChatId, setCurrentId] = useState(null);
+  const [chatsMeta, setChatsMeta] = useState({});
+  const [settingsFor, setSettingsFor] = useState(null);
+
+  // Creates a chat on the server, updates local list & currentChatId
+  async function createChat() {
+    const { id } = await fetch("http://localhost:8000/api/chats", { method: "POST" })
+    .then(r => r.json());
+    setChatList(prev => [id, ...prev]);
+    setCurrentId(id);
+    // 2) give it the “New chat” default in your local cache
+    setChatsMeta(m => ({
+      ...m,
+      [id]: { title: "New chat" }
+    }));
+    return id;
+  }
+  
+  useEffect(() => {
+    fetch("http://localhost:8000/api/chats")
+      .then(r => r.json())
+      .then(list=> {
+        // list = [{id,title},…]
+        setChatList(list.map(c=>c.id));
+        const m = {};
+        list.forEach(c=> m[c.id] = { title: c.title });
+        setChatsMeta(m);
+      });
+  }, []);
+
+  function openChat(id) {
+    setCurrentId(id);
+    messageRefs.current = [];
+    fetch(`http://localhost:8000/api/chats/${id}`)
+      .then(r => r.json())
+      .then(data => {
+        setMessages(data.messages);
+        setQuestionAsked(data.messages.length > 0);
+      });
+  }
 
   function pickFour(arr) {
     // simple shuffle
@@ -66,7 +107,20 @@ function App() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleNewChat = () => {
+  const handleNewChat = async () => {
+
+    // 1) create server-side chat
+    const { id } = await fetch("http://localhost:8000/api/chats", { method: "POST" })
+    .then(r => r.json());
+
+    setChatList(prev => [id, ...prev]);
+    setCurrentId(id);
+    // give it the “New chat” default in your local cache
+    setChatsMeta(m => ({
+      ...m,
+      [id]: { title: "New chat" }
+    }));
+
     setQuestionAsked(false);
     // Clear the input field
     setText('');
@@ -84,10 +138,13 @@ function App() {
   useLayoutEffect(() => {
     if (!containerRef.current || messageRefs.current.length === 0) return;
     const c = containerRef.current;
-    const last = messageRefs.current[messageRefs.current.length - 1];
-    // scroll the container so that `last` sits at the top
-    c.scrollTo({ top: last.offsetTop, behavior: 'smooth' });
-  }, [messages]);
+    const count     = messages.length;
+    if (!c || count === 0) return;
+    const last = messageRefs.current[count - 1];
+    if (last) {
+      c.scrollTo({ top: last.offsetTop, behavior: 'smooth' });
+    }
+  }, [messages, isLoading]);
 
   // Handle form submission and store messages
   // const handleSendMessage = async (e) => {
@@ -196,17 +253,24 @@ function App() {
   //   }
   // };
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!text.trim()) return;
   
     const question = text.trim();
+
+    // 1) Was this the very first message in this chat?
+    const isFirstMessage = !questionAsked;
   
     // 1) push the user message
     setMessages((prev) => [...prev, { text: question, sender: "user" }]);
   
     // 2) reset input
     setText("");
+
+    if (isFirstMessage) {
+      setQuestionAsked(true);
+    }
 
     // Access the textarea directly from the form (using e.target)
     if (textareaRef.current) {
@@ -219,14 +283,38 @@ function App() {
 
     setIsButtonDisabled(true);
     if (!questionAsked) setQuestionAsked(true);
+
+    // 2) ensure chat exists
+    const id = currentChatId || await createChat();
+    // 3) persist user
+    await fetch(`http://localhost:8000/api/chats/${id}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sender: "user", text: question })
+    });
+
+    // IF THIS WAS THE FIRST MESSAGE, rename the chat to this question
+    if (isFirstMessage) {
+      await fetch(`http://localhost:8000/api/chats/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: question })
+      });
+      // update local cache of titles
+      setChatsMeta(m => ({
+        ...m,
+        [id]: { title: question }
+      }));
+    }
   
     // 3) fire off the AI
-    askQuestion(question);
+    askQuestion(question, id);
   };
   
 
   // This drives the POST → stub → type-writer animation
-  async function askQuestion(question) {
+  async function askQuestion(question, chatId) {
+    chatId = chatId || currentChatId;
     // show loader
     const controller = new AbortController();
     abortCtrlRef.current = controller;
@@ -255,6 +343,15 @@ function App() {
         return [...prev, stub];
       });
 
+      // **persist** the AI’s final text against the ID we passed in
+      const resp = await fetch(`http://localhost:8000/api/chats/${chatId}/messages`, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ sender: "ai", text: answer })
+      });
+
+      console.log("AI‐message persisted? →", resp.status, await resp.text());
+
       // typewriter effect (exactly as you already have it)
       let i = 0;
       const interval = setInterval(() => {
@@ -274,21 +371,27 @@ function App() {
             return copy;
           });
         }
-      }, 17);
+      }, 12);
 
     } catch (err) {
       setIsLoading(false);
-      if (err.name === "AbortError") {
-        setMessages((prev) => [
-          ...prev,
-          { text: "Response aborted", sender: "ai" },
-        ]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          { text: "Error fetching response", sender: "ai" },
-        ]);
-      }
+      const errText = err.name === "AbortError"
+      ? "Response aborted"
+      : "Error fetching response";
+
+      // 1) Push it into UI state
+      setMessages((prev) => [
+        ...prev,
+        { text: errText, sender: "ai" },
+      ]);
+
+      // 2) Persist it to the server
+      //    (we assume currentChatId is set by now)
+      await fetch(`http://localhost:8000/api/chats/${currentChatId}/messages`, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ sender: "ai", text: errText })
+      });
     } finally {
       abortCtrlRef.current = null;
     }
@@ -325,6 +428,42 @@ function App() {
       }
     });
   }
+
+  const renameChat = async () => {
+    const id = settingsFor;
+    const currentTitle = chatsMeta[id]?.title || '';
+    const newTitle = prompt("Rename chat:", currentTitle);
+    if (!newTitle) {
+      setSettingsFor(null);
+      return;
+    }
+    await fetch(`http://localhost:8000/api/chats/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: newTitle }),
+    });
+    setChatsMeta(m => ({
+      ...m,
+      [id]: { title: newTitle }
+    }));
+    setSettingsFor(null);
+  };
+
+  const deleteChat = async () => {
+    const id = settingsFor;
+    if (!window.confirm("Delete this chat?")) {
+      setSettingsFor(null);
+      return;
+    }
+    await fetch(`http://localhost:8000/api/chats/${id}`, { method: "DELETE" });
+    setChatList(list => list.filter(x => x !== id));
+    if (currentChatId === id) {
+      setCurrentId(null);
+      setMessages([]);
+      setQuestionAsked(false);
+    }
+    setSettingsFor(null);
+  };
      
   return (
     <div className="background">
@@ -348,9 +487,42 @@ function App() {
           </div>
           <div className='recent-chats'>
             <h3>Recent</h3>
-            <p>Effects of intermittent</p>
-            <p>Best way to gain mus</p>
-            <p>Hydration in fat loss</p>
+            {chatList.map(id => (
+              <div
+                key={id}
+                className={`chat-card ${id === currentChatId ? "chat-card--active" : ""}`}
+                onClick={() => openChat(id)}
+              >
+                <span className="chat-title">
+                  {chatsMeta[id]?.title || `Chat ${id.slice(0,4)}`}
+                </span>
+                <button
+                  className="chat-settings-btn"
+                  onClick={e => {
+                    e.stopPropagation();
+                    setSettingsFor(settingsFor === id ? null : id);
+                  }}
+                >
+                  {/* ••• */}
+                  <svg width="16" height="16" viewBox="0 0 24 24">
+                    <circle cx="5" cy="12" r="2"/>
+                    <circle cx="12" cy="12" r="2"/>
+                    <circle cx="19" cy="12" r="2"/>
+                  </svg>
+                </button>
+
+                {settingsFor === id && (
+                  <div className="chat-menu-popup" onClick={e => e.stopPropagation()}>
+                    <button className="chat-menu-item" onClick={renameChat}>
+                      Rename
+                    </button>
+                    <button className="chat-menu-item delete" onClick={deleteChat}>
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -367,16 +539,31 @@ function App() {
                   <button
                     key={idx}
                     className="suggestion-card"
-                    onClick={() => {
+                    onClick={async () => {
                       messageRefs.current = [];
                       // show chat view
                       setQuestionAsked(true);
+                      // 1) ensure we have a chat
+                      const id = currentChatId || await createChat();
                       // seed the user message
                       setMessages([{ text: myth, sender: "user" }]);
+                      // 3) persist the user message
+                      await fetch(`http://localhost:8000/api/chats/${id}/messages`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sender: "user", text: myth })
+                      });
+                      // 4) rename the chat to that myth
+                      await fetch(`http://localhost:8000/api/chats/${id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ title: myth })
+                      });
+                      setChatsMeta(m => ({ ...m, [id]: { title: myth } }));
                       // disable the (now hidden) input under the hood
                       setIsButtonDisabled(true);
                       // launch the AI
-                      askQuestion(myth);
+                      askQuestion(myth, id);
                     }}
                   >
                     {myth}

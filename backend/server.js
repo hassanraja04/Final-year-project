@@ -308,6 +308,19 @@ const cors = require("cors");
 // require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
+const { v4: uuidv4 } = require("uuid");
+const CHATS_FILE = path.join(__dirname, "data", "chats.json");
+
+// load (or init) the chat-store
+let chats = {};
+try {
+  chats = JSON.parse(fs.readFileSync(CHATS_FILE, "utf8"));
+} catch {
+  chats = {};
+}
+function saveChats() {
+  fs.writeFileSync(CHATS_FILE, JSON.stringify(chats, null, 2));
+}
 
 // Load your embeddings data
 const embeddingsPath = path.join(__dirname, "data", "studiesEmbeddings.json");
@@ -498,6 +511,64 @@ Question: ${question}`;
     console.error("Error in /api/ask route:", error);
     return res.status(500).json({ error: "Something went wrong." });
   }
+});
+
+// 1) List all chats
+app.get("/api/chats", (req, res) => {
+  const list = Object.entries(chats).map(([id, chat]) => ({
+    id,
+    title: chat.title || "New chat"
+  }));
+  res.json(list);
+});
+
+// 2) Create a brand-new chat
+app.post("/api/chats", (req, res) => {
+  const id = uuidv4();
+  chats[id] = {
+    title: "New chat", 
+    messages: [] 
+  };
+  saveChats();
+  res.json({ id });
+});
+
+// add a PATCH endpoint to rename
+app.patch("/api/chats/:id", (req, res) => {
+  const chat = chats[req.params.id];
+  if (!chat) return res.status(404).json({ error: "not found" });
+  const { title } = req.body;
+  chat.title = title;
+  saveChats();
+  res.json({ ok: true, title });
+});
+
+// 3) Get one chat’s history
+app.get("/api/chats/:id", (req, res) => {
+  const chat = chats[req.params.id];
+  if (!chat) return res.status(404).json({ error: "not found" });
+  res.json({ id: req.params.id, messages: chat.messages });
+});
+
+// 4) Append a message to a chat
+app.post("/api/chats/:id/messages", (req, res) => {
+  const chat = chats[req.params.id];
+  if (!chat) return res.status(404).json({ error: "not found" });
+  const { sender, text } = req.body;
+  chat.messages.push({ sender, text, timestamp: Date.now() });
+  saveChats();
+  res.json({ ok: true });
+});
+
+// 5) Delete a chat
+app.delete("/api/chats/:id", (req, res) => {
+  const { id } = req.params;
+  if (!chats[id]) {
+    return res.status(404).json({ error: "not found" });
+  }
+  delete chats[id];
+  saveChats();
+  res.json({ ok: true });
 });
 
 // Start server after pipeline is ready
