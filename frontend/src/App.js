@@ -38,13 +38,16 @@ function App() {
   const [chatsMeta, setChatsMeta] = useState({});
   const [settingsFor, setSettingsFor] = useState(null);
 
-  // Creates a chat on the server, updates local list & currentChatId
+  // Creating a chat on the server 
   async function createChat() {
+    // Sending POST request to create new chat and get its ID
     const { id } = await fetch("http://localhost:8000/api/chats", { method: "POST" })
     .then(r => r.json());
+    // Adding new chat ID to the beginning of chat list
     setChatList(prev => [id, ...prev]);
+    // Setting this new chat as currently active chat 
     setCurrentId(id);
-    // 2) give it the “New chat” default in your local cache
+    // Initializing meta deta for this chat 
     setChatsMeta(m => ({
       ...m,
       [id]: { title: "New chat" }
@@ -52,41 +55,54 @@ function App() {
     return id;
   }
   
+  // fetches all chats from the server
   useEffect(() => {
     fetch("http://localhost:8000/api/chats")
       .then(r => r.json())
       .then(list=> {
-        // list = [{id,title},…]
+        // filling chat list 
         setChatList(list.map(c=>c.id));
+        // Creating a metadata object with titles indexed by chat ID
         const m = {};
         list.forEach(c=> m[c.id] = { title: c.title });
         setChatsMeta(m);
       });
   }, []);
 
+  // Openining and loading a specific chat by its ID 
   function openChat(id) {
+    // Setting requested chat as current active chat
     setCurrentId(id);
     messageRefs.current = [];
+    // fetching the messages for this specific chat 
     fetch(`http://localhost:8000/api/chats/${id}`)
       .then(r => r.json())
       .then(data => {
+        // Updating the messages state with the fetched messages
         setMessages(data.messages);
+        // Controls showing the chat view or the home screen
         setQuestionAsked(data.messages.length > 0);
       });
   }
 
+  // randomly selects 4 elements from the array
   function pickFour(arr) {
-    // simple shuffle
+    // creating a copy of the array for modification
     const copy = [...arr];
+    // implementing Knuth shuffle algorithm
     for (let i = copy.length - 1; i > 0; i--) {
+      // generating a random index between 0 and 1
       const j = Math.floor(Math.random() * (i + 1));
+      //swapping elements for creating randomization effect
       [copy[i], copy[j]] = [copy[j], copy[i]];
     }
+    // returning only the first 4 elements
     return copy.slice(0, 4);
   }
   
-  // on first render
+  // runs only once on component mount 
   useEffect(() => {
+    // updating the component state with the 4 randomly selected myths 
     setSuggestions(pickFour(allMyths));
   }, []);
 
@@ -146,133 +162,26 @@ function App() {
     }
   }, [messages, isLoading]);
 
-  // Handle form submission and store messages
-  // const handleSendMessage = async (e) => {
-  //   e.preventDefault();
-    
-  //   if (text.trim()) {
-  
-  //     // Add user message to the messages array
-  //     setMessages((prev) => [...prev, { text, sender: 'user' }]);
-  //     const userQuestion = text;
-  
-  //     // Clear the input field
-  //     setText(''); // This clears the form input
-  
-  //     // Access the textarea directly from the form (using e.target)
-  //     if (textareaRef.current) {
-  //       const textarea = textareaRef.current;
-  //       textarea.style.height = '22px';
-  //       textarea.style.height = 'auto';
-  //     } else {
-  //       console.log("Textarea not found in handleSendMessage.");
-  //     }
-  
-  //     if (!questionAsked) {
-  //       setQuestionAsked(true); // Switch to the second view after the first message
-  //     }
-
-  //     // 2) set loading + new controller
-  //     const controller = new AbortController();
-  //     abortCtrlRef.current = controller;
-  //     setIsLoading(true);
-  
-  //     try {
-  //       // Send a POST request to /echo
-  //       const response = await fetch("http://localhost:8000/api/ask", {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({ question: text }),
-  //         signal: abortCtrlRef.current.signal,
-  //       });
-    
-  //       const data = await response.json();
-
-  //       // Stop blinking, enqueue stub → shows static caret
-  //       setIsLoading(false);
-    
-  //       // 3) push the AI stub
-  //       setMessages(prev => {
-  //         const stub = {
-  //           sender: 'ai',
-  //           fullText: data.answer,
-  //           displayedText: '',
-  //           isTyping: true
-  //         };
-  //         typingIndexRef.current = prev.length;
-  //         return [...prev, stub];
-  //       });
-
-  //       // 4) typewriter animation
-  //       const answer = data.answer;
-  //       let i = 0;
-  //       const intervalId = setInterval(() => {
-  //         setMessages(prev => {
-  //           const msgs = [...prev];
-  //           const idx = typingIndexRef.current;
-  //           const msg = msgs[idx];
-  //           const next = answer.slice(0, i + 1);
-  //           msgs[idx] = { ...msg, displayedText: next };
-  //           return msgs;
-  //         });
-  //         i++;
-  //         if (i >= answer.length) {
-  //           clearInterval(intervalId);
-  //           // remove caret
-  //           setMessages(prev => {
-  //             const copy = [...prev];
-  //             copy[typingIndexRef.current] = {
-  //               ...copy[typingIndexRef.current],
-  //               isTyping: false
-  //             };
-  //             return copy;
-  //           });
-  //         }
-  //       }, 17); // 30ms per character, tweak as you like
-
-  //     } catch (error) {
-  //       if (error.name == 'AbortError') {
-  //         setMessages(prev => [
-  //           ...prev,
-  //           { text: "Response aborted", sender: "ai" }
-  //         ]);
-  //       }
-  //       else {
-  //         console.error("Error sending message to server:", error);
-  //         setMessages(prev => [
-  //           ...prev,
-  //           { text: "Error fetching response. Please try again later", sender: "ai" }
-  //         ]);
-  //       }
-  //     } finally {
-  //       setIsLoading(false);
-  //       abortCtrlRef.current = null;
-  //     }
-  //   } else {
-  //     console.log("No text entered to send."); 
-  //   }
-  // };
-
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!text.trim()) return;
   
     const question = text.trim();
 
-    // 1) Was this the very first message in this chat?
+    // Checking if this was the very first message in this chat
     const isFirstMessage = !questionAsked;
   
-    // 1) push the user message
+    // pushing the user message
     setMessages((prev) => [...prev, { text: question, sender: "user" }]);
   
-    // 2) reset input
+    // resetting input 
     setText("");
 
     if (isFirstMessage) {
       setQuestionAsked(true);
     }
 
-    // Access the textarea directly from the form (using e.target)
+    // Resizing the text area after entering alot of text 
     if (textareaRef.current) {
       const textarea = textareaRef.current;
       textarea.style.height = '22px';
@@ -284,43 +193,46 @@ function App() {
     setIsButtonDisabled(true);
     if (!questionAsked) setQuestionAsked(true);
 
-    // 2) ensure chat exists
+    // ensuring chat exists
     const id = currentChatId || await createChat();
-    // 3) persist user
+    // persisting  user message
     await fetch(`http://localhost:8000/api/chats/${id}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sender: "user", text: question })
     });
 
-    // IF THIS WAS THE FIRST MESSAGE, rename the chat to this question
+    // renaming the chat to this question if it was the first question 
     if (isFirstMessage) {
       await fetch(`http://localhost:8000/api/chats/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: question })
       });
-      // update local cache of titles
+      // updateing local cache of titles
       setChatsMeta(m => ({
         ...m,
         [id]: { title: question }
       }));
     }
   
-    // 3) fire off the AI
+    // starting the Ai's response
     askQuestion(question, id);
   };
   
 
   // This drives the POST → stub → type-writer animation
   async function askQuestion(question, chatId) {
+    // Ensuring chatID is present
     chatId = chatId || currentChatId;
-    // show loader
+    // Setting up abort controller to cancel the request
     const controller = new AbortController();
     abortCtrlRef.current = controller;
+    // Showing blinking carot 
     setIsLoading(true);
 
     try {
+      // Sending question to /api/ask endpoint
       const res = await fetch("http://localhost:8000/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -329,9 +241,10 @@ function App() {
       });
       const { answer } = await res.json();
 
+      // hiding loader once the answer arrives
       setIsLoading(false);
 
-      // enqueue AI “stub” for typewriter
+      // adding a temporary AI message placeholder
       setMessages((prev) => {
         const stub = {
           sender: "ai",
@@ -343,7 +256,7 @@ function App() {
         return [...prev, stub];
       });
 
-      // **persist** the AI’s final text against the ID we passed in
+      // persisting the full answer to chat history 
       const resp = await fetch(`http://localhost:8000/api/chats/${chatId}/messages`, {
         method: "POST",
         headers: {"Content-Type":"application/json"},
@@ -352,26 +265,28 @@ function App() {
 
       console.log("AI‐message persisted? →", resp.status, await resp.text());
 
-      // typewriter effect (exactly as you already have it)
+      // typewriter effect
       let i = 0;
       const interval = setInterval(() => {
         setMessages((prev) => {
           const msgs = [...prev];
           const idx = typingIndexRef.current;
           const next = answer.slice(0, i + 1);
+          // revealing one more character in displayedText
           msgs[idx] = { ...msgs[idx], displayedText: next };
           return msgs;
         });
         i++;
         if (i >= answer.length) {
           clearInterval(interval);
+          // marking that typing is complete so static disapears 
           setMessages((prev) => {
             const copy = [...prev];
             copy[typingIndexRef.current].isTyping = false;
             return copy;
           });
         }
-      }, 12);
+      }, 12); //speed of 12ms per character 
 
     } catch (err) {
       setIsLoading(false);
@@ -379,33 +294,36 @@ function App() {
       ? "Response aborted"
       : "Error fetching response";
 
-      // 1) Push it into UI state
+      // showing error in the UI
       setMessages((prev) => [
         ...prev,
         { text: errText, sender: "ai" },
       ]);
 
-      // 2) Persist it to the server
-      //    (we assume currentChatId is set by now)
+      // Persisting the error message to the server 
       await fetch(`http://localhost:8000/api/chats/${currentChatId}/messages`, {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({ sender: "ai", text: errText })
       });
     } finally {
+      // cleaning up abort controller reference
       abortCtrlRef.current = null;
     }
   }
 
   
   function renderAIResponse(text) {
+    // Defining regex patterns for URLs and keywords
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const keywordRegex = /(Conclusion:|Rationale:)/g;
   
+    // Splitting text by URLs and processing each part 
     return text.split(urlRegex).map((part, i) => {
       if (urlRegex.test(part)) {
-        // Trim trailing punctuation
+        // Cleaning any trailing punctuation
         const cleanUrl = part.replace(/[\)\]\.,;:]+$/g, "");
+        // enclosing URLs in anchor tags 
         return (
           <a
             key={`url-${i}`}
@@ -417,12 +335,12 @@ function App() {
           </a>
         );
       } else {
-        // split further on the keywords
+        // splitting further on the keywords
         return part
           .split(keywordRegex)
           .map((seg, j) =>
             keywordRegex.test(seg)
-              ? <strong key={`kw-${i}-${j}`}>{seg}</strong>
+              ? <strong key={`kw-${i}-${j}`}>{seg}</strong> // Emphasizing keywords
               : <span key={`txt-${i}-${j}`}>{seg}</span>
           );
       }
@@ -503,7 +421,6 @@ function App() {
                     setSettingsFor(settingsFor === id ? null : id);
                   }}
                 >
-                  {/* ••• */}
                   <svg width="16" height="16" viewBox="0 0 24 24">
                     <circle cx="5" cy="12" r="2"/>
                     <circle cx="12" cy="12" r="2"/>
@@ -528,7 +445,7 @@ function App() {
       )}
       {/* <div className="main-wrapper"> */}
         {!questionAsked ? (
-          // Initial View
+          // Home screen view with the suggestion cards 
           <>
             <div className="main-wrapper">
               <div className="header-wrapper">
@@ -541,28 +458,28 @@ function App() {
                     className="suggestion-card"
                     onClick={async () => {
                       messageRefs.current = [];
-                      // show chat view
+                      // showing chat view
                       setQuestionAsked(true);
-                      // 1) ensure we have a chat
+                      // ensuring there is a chat
                       const id = currentChatId || await createChat();
-                      // seed the user message
+                      // seeding the user's message
                       setMessages([{ text: myth, sender: "user" }]);
-                      // 3) persist the user message
+                      // persisting the user's message
                       await fetch(`http://localhost:8000/api/chats/${id}/messages`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ sender: "user", text: myth })
                       });
-                      // 4) rename the chat to that myth
+                      // renaming the chat to that myth
                       await fetch(`http://localhost:8000/api/chats/${id}`, {
                         method: "PATCH",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ title: myth })
                       });
                       setChatsMeta(m => ({ ...m, [id]: { title: myth } }));
-                      // disable the (now hidden) input under the hood
+                      // disabling the input under the hood
                       setIsButtonDisabled(true);
-                      // launch the AI
+                      // starting the AI's response
                       askQuestion(myth, id);
                     }}
                   >
@@ -578,9 +495,9 @@ function App() {
                     onChange={handleTextChange}
                     value={text}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) { // Check if Enter is pressed without Shift
-                        e.preventDefault(); // Prevent the default behavior (new line)
-                        handleSendMessage(e); // Call the function to send the message
+                      if (e.key === 'Enter' && !e.shiftKey) { // Checking if Enter is pressed without Shift
+                        e.preventDefault();
+                        handleSendMessage(e); // Calling the function to send the message
                       }
                     }}
                   />
@@ -604,21 +521,22 @@ function App() {
                 {messages.map((msg,i) => (
                   <div
                     key={i}
-                    // stash each message node in our refs array
+                    // storing reference to each message
                     ref={el => { messageRefs.current[i] = el }}
                     className={msg.sender==='user'?'user-message':'ai-response'}
                   >
                     {msg.sender==='ai' ? (
                       <>
+                        {/* Cleaning Ai's response to desired format */}
                         {renderAIResponse(msg.displayedText ?? msg.text)}
                         
-                        {/* only show the NON-BLINKING caret while we’re typing out this message */}
+                        {/* Showing non blinking caret while this specific message is typed */}
                         {msg.isTyping && <span className="static-caret" />}
 
-                        {/* 3) done? no caret */}
+                        {/* after typing no carot is shown */}
                       </>
                     ) : (
-                      // user bubble
+                      // displaying user bubble
                       <span>{msg.text}</span>
                     )}
                   </div>

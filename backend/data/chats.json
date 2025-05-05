@@ -1,6 +1,6 @@
 {
   "3494ecc4-d6ce-4eff-bdc2-a3ac087e486f": {
-    "title": "Does lifting weights stop you from growing taller",
+    "title": "hello",
     "messages": [
       {
         "sender": "user",
@@ -59,29 +59,23 @@
       }
     ]
   },
-  "4419260a-f3cd-4814-b19c-ddd7025b2480": {
-    "title": "Can you spot reduce fat",
+  "fa294299-ee86-434b-ad86-573f33e4f021": {
+    "title": "If I don't feel sore after my workout, does that mean I didn't work hard enough",
     "messages": [
       {
         "sender": "user",
-        "text": "Can you spot reduce fat",
-        "timestamp": 1745885669245
+        "text": "If I don't feel sore after my workout, does that mean I didn't work hard enough",
+        "timestamp": 1745956857647
       },
       {
         "sender": "ai",
-        "text": "Conclusion: No https://doi.org/10.1249/mss.0b0138058a5cb) Subjects who participated in an upper-body resistance training program did not experience significant changes in subcutaneous fat in their dominant (untrained) arms, suggesting that spot reduction does not occur as a result of an exercise program. Rationale: The study found that resistance training did not lead to significant changes in subcutaneous fat in the untrained arm, which contradicts the belief in spot reduction.",
-        "timestamp": 1745885685740
-      },
-      {
-        "sender": "user",
-        "text": "hello",
-        "timestamp": 1745886091516
-      },
-      {
-        "sender": "ai",
-        "text": "Response aborted",
-        "timestamp": 1745886093672
+        "text": "Conclusion: No (Delayed post effort muscle sorenesshttps://doi.org/10.1016/j.annrmp.2004.05.012)\nRationale: The study states that muscle intolerance to exercise may result from different processes and diagnosis involves confirming the source of pain and potential pathological myalgia. It also explains that DOMS usually develops 12-48 hours after intensive and/or unusual eccentric muscle action and the symptoms usually involve the quadriceps muscle group but may also affect the hamstring and triceps surae groups.",
+        "timestamp": 1745956877700
       }
     ]
+  },
+  "7bdfa172-28b6-4e8e-a511-26b0a180a39c": {
+    "title": "New chat",
+    "messages": []
   }
 }
