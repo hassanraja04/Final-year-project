@@ -3,10 +3,12 @@
 ## Prerequisites
 
 - **llama.cpp**
+
 Install and build [llama.cpp](https://github.com/ggerganov/llama.cpp) on your machine.
 This is required to run the local Vicuna model
 
 - **Vicuna model**
+
 Download [vicuna-7b-v1.5.Q5_K_M.gguf](https://huggingface.co/TheBloke/vicuna-7B-v1.5-GGUF/blob/main/vicuna-7b-v1.5.Q5_K_M.gguf) from the Hugging Face release page and place it in a `models/` directory at the project root.
 
 - **Node.js & npm**
